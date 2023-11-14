@@ -4,10 +4,13 @@ version = "0.1.0"
 description = "search engine model"
 authors = ["Joel J George"]
 readme = "README.md"
+packages =[{include = "tests"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 requests = "^2.31.0"
+gensim = "^4.3.2"
+nltk = "^3.8.1"
 
 
 [build-system]

@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def get_website_label(url):
+def get_website_labels(url):
     # Fetch the website's HTML content
     response = requests.get(url)
     html_content = response.content
@@ -12,9 +12,11 @@ def get_website_label(url):
 
     # Extract potential labels from the website's title, meta tags, and domain name
     title = soup.find('title')
+    potential_labels = []
+
     if title:
         title_words = title.text.split()
-        potential_labels = title_words
+        potential_labels.extend(title_words)
 
     meta_tags = soup.find_all('meta')
     for meta_tag in meta_tags:
@@ -28,22 +30,10 @@ def get_website_label(url):
         top_level_domain = domain_name_parts[-1]
         potential_labels.append(top_level_domain)
 
-    # Identify the most frequent potential label
-    label_counts = {}
-    for potential_label in potential_labels:
-        label_counts[potential_label] = label_counts.get(
-            potential_label, 0) + 1
-
-    if label_counts:
-        most_frequent_label = max(label_counts, key=label_counts.get)
-        website_label = most_frequent_label
-    else:
-        website_label = None
-
-    return website_label
+    return potential_labels
 
 
 # Example usage
-url = "https://www.pottasfarmworld.com"
-website_label = get_website_label(url)
-print("Website label:", website_label)
+url = "https://pottasfarmworld.com/"
+website_labels = get_website_labels(url)
+print("Website labels:", list(set(website_labels)))
