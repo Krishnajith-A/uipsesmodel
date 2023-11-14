@@ -3,17 +3,11 @@ from bs4 import BeautifulSoup
 
 
 def get_website_labels(url):
-    # Fetch the website's HTML content
     response = requests.get(url)
     html_content = response.content
-
-    # Parse the HTML content using BeautifulSoup
     soup = BeautifulSoup(html_content, 'html.parser')
-
-    # Extract potential labels from the website's title, meta tags, and domain name
     title = soup.find('title')
     potential_labels = []
-
     if title:
         title_words = title.text.split()
         potential_labels.extend(title_words)
