@@ -10,6 +10,52 @@ user1 = {
   features: [],
 };
 
+scrapewiki = (data) => {
+  console.log(data.query.search);
+};
+
+app.get("/api/test", async (req, res) => {
+  const url = "https://en.wikipedia.org/w/api.php";
+
+  const params = new URLSearchParams({
+    action: "query",
+    list: "search",
+    srsearch: "Nelson Mandela",
+    format: "json",
+  });
+
+  axios
+    .get(`${url}`, { params })
+    .then(function (response) {
+      console.log(response.data);
+      res.json(response.data);
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+});
+
+app.post("/api/search", async (req, res) => {
+  let searchterm = req.body.searchterm;
+  console.log(req.body);
+  const wikiurlapi = "https://en.wikipedia.org/w/api.php";
+  const params = new URLSearchParams({
+    action: "query",
+    list: "search",
+    srsearch: searchterm,
+    format: "json",
+  });
+  axios
+    .get(`${wikiurlapi}`, { params })
+    .then(function (response) {
+      let summ = scrapewiki(response.data);
+      res.json(response.data);
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+});
+
 app.post("/api/scrape", async (req, res) => {
   try {
     let websites = req.body.websites;
