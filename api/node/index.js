@@ -1,4 +1,5 @@
 const exp = require("constants");
+const cors = require("cors");
 const OpenAI = require("openai");
 const { Client } = require("pg");
 const express = require("express");
@@ -10,7 +11,9 @@ const dbconfig = require("./model/pgDBconnction.json");
 require("dotenv").config();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_APIKEY });
 
 wikiApicall = async (searchterm) => {
@@ -109,11 +112,38 @@ app.post("/api/search", async (req, res) => {
       unsortedResultsSearch[key].score = score[index + 1];
       unsortedResultsSearch[key].categories = resultInterests[index + 1];
     });
+
     unsortedResultsSearch.sort((a, b) => {
       return b.score - a.score;
     });
     console.log(unsortedResultsSearch);
     res.json({ sortedResults: unsortedResultsSearch });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/update", async (req, res) => {
+  let userid = req.body.userid;
+  let categories = req.body.categories;
+  userid = parseInt(userid);
+  try {
+    const client = new Client(dbconfig);
+    await client.connect();
+    let user = await client.query(userSelectQuery(userid));
+    let interestedCategories = user.rows[0].categories;
+    for (const key in categories) {
+      if (interestedCategories[key] === undefined) {
+        interestedCategories[key] = 0;
+      }
+      interestedCategories[key] += categories[key];
+    }
+    await client.query(
+      `UPDATE users SET categories = '${JSON.stringify(
+        interestedCategories
+      )}' WHERE id = ${userid}`
+    );
+    res.json({ message: "success" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
