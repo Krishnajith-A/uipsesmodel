@@ -1,0 +1,1 @@
+This is a document about the history of natural language processing. Natural language processing (NLP) is a field of artificial intelligence concerned with the interaction between computers and human (natural) languages

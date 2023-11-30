@@ -1,0 +1,1 @@
+This is a document about the applications of natural language processing. NLP has a wide range of applications, including machine translation, sentiment analysis, and text classification.
