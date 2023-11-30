@@ -7,6 +7,7 @@ const cheerio = require("cheerio");
 const axios = require("axios");
 const { parse } = require("path");
 const { userSelectQuery } = require("./model/query/selectUser.js");
+const { updateUserAttribute } = require("./model/query/updateUserAttribute.js");
 const dbconfig = require("./model/pgDBconnction.json");
 require("dotenv").config();
 
@@ -85,15 +86,15 @@ app.post("/api/search", async (req, res) => {
     const interestedCategoriesList = Object.keys(interestedCategories);
     let prompt = LLMpromptcreation(interestedCategoriesList, unsortedResults);
     //trying not to finish the 5 dollars 🥲
-    // let resultInterests = await OpenAIcompletion(prompt);
-    // try {
-    //   resultInterests = JSON.parse(resultInterests.content);
-    // } catch (error) {
-    //   console.log("not possible to parse");
-    // }
+    let resultInterests = await OpenAIcompletion(prompt);
+    try {
+      resultInterests = JSON.parse(resultInterests.content);
+    } catch (error) {
+      console.log("not possible to parse");
+    }
 
     //setting the tempjson to
-    resultInterests = tempjson;
+    // resultInterests = tempjson;
     //
     let score = {};
     for (const key in resultInterests) {
@@ -116,7 +117,7 @@ app.post("/api/search", async (req, res) => {
     unsortedResultsSearch.sort((a, b) => {
       return b.score - a.score;
     });
-    console.log(unsortedResultsSearch);
+    // console.log(unsortedResultsSearch);
     res.json({ sortedResults: unsortedResultsSearch });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -124,25 +125,25 @@ app.post("/api/search", async (req, res) => {
 });
 
 app.post("/api/update", async (req, res) => {
+  console.log(req.body);
   let userid = req.body.userid;
   let categories = req.body.categories;
   userid = parseInt(userid);
+  // console.log(categories, userid);
   try {
     const client = new Client(dbconfig);
     await client.connect();
     let user = await client.query(userSelectQuery(userid));
     let interestedCategories = user.rows[0].categories;
     for (const key in categories) {
-      if (interestedCategories[key] === undefined) {
-        interestedCategories[key] = 0;
-      }
-      interestedCategories[key] += categories[key];
+      console.log("the key is ", categories[key]);
+      // if (interestedCategories[categories[key]] === undefined) {
+      //   interestedCategories[categories[key]] = 0;
+      // }
+      interestedCategories[categories[key]] += 1;
     }
-    await client.query(
-      `UPDATE users SET categories = '${JSON.stringify(
-        interestedCategories
-      )}' WHERE id = ${userid}`
-    );
+    console.log(interestedCategories);
+    await client.query(updateUserAttribute(interestedCategories, userid));
     res.json({ message: "success" });
   } catch (error) {
     res.status(500).json({ error: error.message });
