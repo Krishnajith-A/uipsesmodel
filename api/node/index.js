@@ -1,43 +1,16 @@
 const exp = require("constants");
+const { Client } = require("pg");
 const express = require("express");
 const cheerio = require("cheerio");
 const axios = require("axios");
+const { parse } = require("path");
+const { userSelectQuery } = require("./model/query/selectUser.js");
+const dbconfig = require("./model/pgDBconnction.json");
+
 const app = express();
 app.use(express.json());
-user1 = {
-  id: 1,
-  name: "John Johnson",
-  features: [],
-};
 
-scrapewiki = (data) => {
-  console.log(data.query.search);
-};
-
-app.get("/api/test", async (req, res) => {
-  const url = "https://en.wikipedia.org/w/api.php";
-
-  const params = new URLSearchParams({
-    action: "query",
-    list: "search",
-    srsearch: "Nelson Mandela",
-    format: "json",
-  });
-
-  axios
-    .get(`${url}`, { params })
-    .then(function (response) {
-      console.log(response.data);
-      res.json(response.data);
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
-});
-
-app.post("/api/search", async (req, res) => {
-  let searchterm = req.body.searchterm;
-  console.log(req.body);
+wikiApicall = async (searchterm) => {
   const wikiurlapi = "https://en.wikipedia.org/w/api.php";
   const params = new URLSearchParams({
     action: "query",
@@ -45,15 +18,31 @@ app.post("/api/search", async (req, res) => {
     srsearch: searchterm,
     format: "json",
   });
-  axios
-    .get(`${wikiurlapi}`, { params })
-    .then(function (response) {
-      let summ = scrapewiki(response.data);
-      res.json(response.data);
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
+  try {
+    const response = await axios.get(`${wikiurlapi}`, { params });
+    return response;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+};
+
+app.post("/api/search", async (req, res) => {
+  let searchterm = req.body.searchterm;
+  let userid = req.body.userid;
+  userid = parseInt(userid);
+
+  try {
+    let unsortedResults = await wikiApicall(searchterm);
+
+    const client = new Client(dbconfig);
+    await client.connect();
+    let user = await client.query(userSelectQuery(userid));
+    console.log(user.rows[0]);
+    res.json({ unsortedResults: unsortedResults.data });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.post("/api/scrape", async (req, res) => {

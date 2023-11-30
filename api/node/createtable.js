@@ -1,14 +1,9 @@
 const { Client } = require("pg");
 // const express = require("express");
 const { getCreateTableQuery } = require("./model/userModel.js");
+const dbconfig = require("./model/pgDBconnction.json");
 
-const client = new Client({
-  user: "postgres",
-  host: "localhost",
-  database: "postgres",
-  password: "postgres",
-  port: "5432",
-});
+const client = new Client(dbconfig);
 
 client
   .connect()
