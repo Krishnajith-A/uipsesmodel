@@ -34,13 +34,15 @@ LLMpromptcreation = (interestedCategoriesList, unsortedResults) => {
   let unsortedSearch = unsortedResults.data.query.search;
   // console.log("The unsorted results are given here", unsortedSearch);
   let prompt =
-    "From the below list of numbered results of 10 and the 100 categories listed below, give the categories corresponding to each of the results.\n";
+    "From the below list of numbered results of 10 and the 100 categories listed below, give the categories corresponding to each of the results.give it in the json format and only that is needed and json format should be pure json string.\n";
   for (let i = 0; i < unsortedSearch.length; i++) {
-    prompt += `${i + 1}. ${unsortedSearch[i].snippet}\n`;
+    prompt += `${i + 1}.title:${unsortedSearch[i].title} ${
+      unsortedSearch[i].snippet
+    }\n`;
   }
   prompt += "\nCategories:\n";
   prompt += JSON.stringify(interestedCategoriesList);
-  console.log("The prompt is", prompt);
+  // console.log("The prompt is", prompt);
   return prompt;
 };
 
@@ -50,6 +52,19 @@ OpenAIcompletion = async (prompt) => {
     model: "gpt-3.5-turbo",
   });
   return gptResponse.choices[0].message;
+};
+
+tempjson = {
+  1: ["Business"],
+  2: ["Technology"],
+  3: ["Zoology"],
+  4: ["Business"],
+  5: ["Business"],
+  6: [],
+  7: ["Sports"],
+  8: ["Business"],
+  9: ["Zoology"],
+  10: ["Sports"],
 };
 
 app.post("/api/search", async (req, res) => {
@@ -66,48 +81,41 @@ app.post("/api/search", async (req, res) => {
     let interestedCategories = user.rows[0].categories;
     const interestedCategoriesList = Object.keys(interestedCategories);
     let prompt = LLMpromptcreation(interestedCategoriesList, unsortedResults);
-    let resultInterests = await OpenAIcompletion(prompt);
-    res.json({ unsortedResults: unsortedResults.data });
+    //trying not to finish the 5 dollars 🥲
+    // let resultInterests = await OpenAIcompletion(prompt);
+    // try {
+    //   resultInterests = JSON.parse(resultInterests.content);
+    // } catch (error) {
+    //   console.log("not possible to parse");
+    // }
+
+    //setting the tempjson to
+    resultInterests = tempjson;
+    //
+    let score = {};
+    for (const key in resultInterests) {
+      score[key] = 0;
+      for (const catergory of resultInterests[key]) {
+        if (interestedCategories[catergory] >= 1) {
+          score[key] += interestedCategories[catergory];
+        }
+      }
+    }
+    // console.log(score);
+    let unsortedResultsSearch = unsortedResults.data.query.search;
+    const keys = Object.keys(unsortedResultsSearch);
+    keys.forEach((key, index) => {
+      console.log(index, unsortedResultsSearch[key].title);
+      unsortedResultsSearch[key].score = score[index + 1];
+      unsortedResultsSearch[key].categories = resultInterests[index + 1];
+    });
+    unsortedResultsSearch.sort((a, b) => {
+      return b.score - a.score;
+    });
+    console.log(unsortedResultsSearch);
+    res.json({ sortedResults: unsortedResultsSearch });
   } catch (error) {
     res.status(500).json({ error: error.message });
-  }
-});
-
-app.post("/api/scrape", async (req, res) => {
-  try {
-    let websites = req.body.websites;
-    console.log(websites);
-    if (!Array.isArray(websites)) {
-      console.log("not array");
-    }
-    const metadataPromises = websites.map(async (url) => {
-      try {
-        const response = await axios.get(url);
-        const html = response.data;
-        const $ = cheerio.load(html);
-        const title = $("head title").text();
-        const description = $('meta[name="description"]').attr("content");
-        const ogTitle = $('meta[property="og:title"]').attr("content");
-        const ogDescription = $('meta[property="og:description"]').attr(
-          "content"
-        );
-
-        return {
-          url,
-          title,
-          description,
-          ogTitle,
-          ogDescription,
-        };
-      } catch (error) {
-        return { url, error: "Unable to fetch metadata" };
-      }
-    });
-
-    const metadata = await Promise.all(metadataPromises);
-    res.json({ metadata });
-  } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
   }
 });
 
