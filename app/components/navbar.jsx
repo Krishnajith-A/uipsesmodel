@@ -1,4 +1,5 @@
 // eslint-disable-next-line no-unused-vars
+"use client";
 import {
   Navbar,
   NavbarBrand,
@@ -11,9 +12,25 @@ import {
   DropdownMenu,
   Avatar,
 } from "@nextui-org/react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 // import { AcmeLogo } from "./AcmeLogo.jsx";
-
+const axios = require("axios");
 export default function NavbarNext() {
+  const router = useRouter();
+  useEffect(() => {
+    const authFunction = async () => {
+      try {
+        const response = await axios.post("http://localhost:3000/api/auth", {});
+        if (response.data.status === "fail") {
+          router.push("/");
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+    authFunction();
+  }, []);
   return (
     <Navbar>
       <NavbarBrand>
