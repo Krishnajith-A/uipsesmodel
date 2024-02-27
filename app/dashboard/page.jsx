@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 // import React from "react";
 import NavbarNext from "../components/Navbar.jsx";
@@ -19,6 +19,18 @@ function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [iduser, setIduser] = useState("2");
 
+  useEffect(() => {
+    const fetchdata = async () => {
+      const options = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      };
+      const response = await fetch("http://localhost:3000/api/search", options);
+      console.log(response);
+    };
+    fetchdata();
+  }, []);
   const handleSearch = async () => {
     setLoading(true);
     try {
@@ -61,7 +73,6 @@ function Dashboard() {
             variant={iduser === "1" ? "solid" : "bordered"}
             onClick={() => setIduser("1")}
           >
-            {" "}
             JoJo
           </Chip>
           <Chip
@@ -116,7 +127,6 @@ function Dashboard() {
                       {item.title}
                     </CardHeader>
                     <CardBody>
-                      {" "}
                       <div dangerouslySetInnerHTML={{ __html: item.snippet }} />
                     </CardBody>
                   </Card>
