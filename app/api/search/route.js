@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import wikiapiCall from "../../../lib/utils/functions/wikiapicall";
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const categories = require("../../../lib/utils/defaultCategory.json");
+import { getDuckDuckGoResults } from "../../../lib/utils/functions/duckduckgo";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -54,15 +55,16 @@ export async function POST(request) {
   const response = await result.response;
   let responseText = response.text();
   console.log(responseText);
-  responseText = responseText.replace(/```json\n|```|\n/g, "");
-  const responseData = JSON.parse(responseText);
-
-  console.log(responseData);
+  //   responseText = responseText.replace(/```json\n|```|\n/g, "");
+  //   const responseData = JSON.parse(responseText);
+  const duckduckgoResults = await getDuckDuckGoResults(searchterm);
+  //   console.log(responseData);
   return NextResponse.json({
     prompt: prompt,
     data: searchResults,
     searchResults,
     categories: Object.keys(categories),
-    generativeAI: responseData,
+
+    duckduckgoResults,
   });
 }
