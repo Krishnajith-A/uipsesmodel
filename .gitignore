@@ -37,4 +37,5 @@ next-env.d.ts
 docker-compose.yml
 pgadmin-data
 database
+chroma-data
 .env

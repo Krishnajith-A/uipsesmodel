@@ -65,7 +65,6 @@ function Dashboard() {
     <>
       <div className="min-h-screen">
         <NavbarNext />
-
         <div className="flex justify-center w-full gap-10">
           <Chip
             className="cursor-pointer"
